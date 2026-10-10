@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PandawaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CustomerAuthController;
 use App\Http\Controllers\AdminDashboardController;
 
 // ================= HALAMAN UTAMA TOKO (FRONTEND) =================
@@ -19,6 +20,13 @@ Route::prefix('api')->group(function () {
     Route::post('/voucher/check', [PandawaController::class, 'checkVoucher']);
     Route::get('/orders/history', [PandawaController::class, 'getOrderHistory']);
 });
+
+// ================= AUTHENTICATION CUSTOMER =================
+Route::get('/login', [CustomerAuthController::class, 'showLoginForm'])->name('customer.login');
+Route::post('/login', [CustomerAuthController::class, 'login'])->name('customer.login.submit');
+Route::get('/register', [CustomerAuthController::class, 'showRegisterForm'])->name('customer.register');
+Route::post('/register', [CustomerAuthController::class, 'register'])->name('customer.register.submit');
+Route::post('/logout', [CustomerAuthController::class, 'logout'])->name('customer.logout');
 
 // ================= AUTHENTICATION ADMIN =================
 Route::get('/admin/login', [AuthController::class, 'showLoginForm'])->name('admin.login');

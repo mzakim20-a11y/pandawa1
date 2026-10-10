@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Member extends Model
+class Member extends Authenticatable
 {
+    protected $table = 'members';
+
     protected $fillable = [
         'name',
         'email',
@@ -13,11 +15,25 @@ class Member extends Model
         'address',
         'total_orders',
         'total_spent',
-        'status'
+        'status',
+        'password',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     protected $casts = [
         'total_orders' => 'integer',
-        'total_spent' => 'float'
+        'total_spent'  => 'float',
+        'password'     => 'hashed',
+    ];
+
+    // Nilai awal untuk member yang daftar sendiri lewat halaman /register
+    protected $attributes = [
+        'total_orders' => 0,
+        'total_spent'  => 0,
+        'status'       => 'active',
     ];
 }
