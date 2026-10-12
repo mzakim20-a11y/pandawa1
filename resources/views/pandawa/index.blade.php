@@ -118,13 +118,25 @@
         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
       </div>
 
-      <!-- Right Header Actions (Database Badge & Cart) -->
-      <div class="flex items-center gap-3">
-        <!-- Live DB Indicator -->
-        <div class="hidden sm:flex items-center gap-1.5 bg-navy-900 border border-navy-800 px-2.5 py-1 rounded-xl text-[11px] text-slate-300">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>MySQL Live</span>
-        </div>
+      <!-- Right Header Actions (Masuk/Daftar & Cart) -->
+      <div class="flex items-center gap-2">
+        <!-- Tombol Masuk / Daftar Customer -->
+        @auth('member')
+          <span class="hidden md:inline text-xs text-slate-300">Halo, <strong class="text-white">{{ auth('member')->user()->name }}</strong></span>
+          <form method="POST" action="{{ route('customer.logout') }}">
+            @csrf
+            <button type="submit" class="px-3 py-2 text-xs font-bold rounded-xl border border-navy-700 text-slate-200 hover:bg-navy-800 transition">
+              Keluar
+            </button>
+          </form>
+        @else
+          <a href="{{ route('customer.login') }}" class="px-3 py-2 text-xs font-bold rounded-xl border border-navy-700 text-slate-200 hover:bg-navy-800 transition">
+            Masuk
+          </a>
+          <a href="{{ route('customer.register') }}" class="px-3 py-2 text-xs font-extrabold rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 transition">
+            Daftar
+          </a>
+        @endauth
 
         <!-- Tombol Keranjang Belanja -->
         <button onclick="toggleCartModal(true)" class="relative flex items-center gap-2 bg-gradient-to-r from-blue-600 to-navy-700 hover:from-blue-500 hover:to-navy-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition active:scale-95 shadow-md border border-blue-500/30">
@@ -1061,7 +1073,46 @@
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+  <!-- Status login customer + helper wajib login -->
+  <script>
+    window.IS_LOGGED_IN = @json(auth('member')->check());
+    window.LOGIN_URL = @json(route('customer.login'));
+
+    function requireLogin(evt) {
+      if (window.IS_LOGGED_IN) return true;
+      if (evt && evt.preventDefault) evt.preventDefault();
+      alert('Silakan masuk atau daftar dulu untuk memesan.');
+      window.location.href = window.LOGIN_URL;
+      return false;
+    }
+  </script>
+
   <!-- Core JavaScript -->
   <script src="{{ asset('js/pandawa.js') }}"></script>
+
+  <!-- Bungkus fungsi pesan dari pandawa.js supaya wajib login -->
+  <script>
+    ['openCheckoutModal', 'submitCatalogOrderToDB', 'submitDeliveryToDB', 'submitJastipToDB'].forEach(function (name) {
+      var original = window[name];
+      if (typeof original !== 'function') return;
+      window[name] = function () {
+        if (!requireLogin(arguments[0])) return;
+        return original.apply(this, arguments);
+      };
+    });
+
+    // Kalau server menolak pesanan (401, misalnya sesi habis), arahkan ke login
+    var originalFetch = window.fetch;
+    window.fetch = function () {
+      var input = arguments[0];
+      var url = typeof input === 'string' ? input : ((input && input.url) || '');
+      return originalFetch.apply(this, arguments).then(function (res) {
+        if (res.status === 401 && url.indexOf('/api/order/') !== -1) {
+          window.location.href = window.LOGIN_URL;
+        }
+        return res;
+      });
+    };
+  </script>
 </body>
 </html>

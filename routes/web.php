@@ -11,14 +11,19 @@ Route::get('/', [PandawaController::class, 'index'])->name('home');
 
 // API Endpoints Database Frontend
 Route::prefix('api')->group(function () {
+    // Boleh diakses tanpa login
     Route::get('/products', [PandawaController::class, 'getProducts']);
-    Route::post('/order/catalog', [PandawaController::class, 'createCatalogOrder']);
-    Route::post('/order/delivery', [PandawaController::class, 'createDeliveryOrder']);
-    Route::post('/order/jastip', [PandawaController::class, 'createJastipOrder']);
     Route::get('/tracking/{orderCode}', [PandawaController::class, 'getOrderTracking']);
     Route::post('/tracking/{orderCode}/step', [PandawaController::class, 'updateTrackingStep']);
     Route::post('/voucher/check', [PandawaController::class, 'checkVoucher']);
-    Route::get('/orders/history', [PandawaController::class, 'getOrderHistory']);
+
+    // Wajib login customer
+    Route::middleware('auth:member')->group(function () {
+        Route::post('/order/catalog', [PandawaController::class, 'createCatalogOrder']);
+        Route::post('/order/delivery', [PandawaController::class, 'createDeliveryOrder']);
+        Route::post('/order/jastip', [PandawaController::class, 'createJastipOrder']);
+        Route::get('/orders/history', [PandawaController::class, 'getOrderHistory']);
+    });
 });
 
 // ================= AUTHENTICATION CUSTOMER =================

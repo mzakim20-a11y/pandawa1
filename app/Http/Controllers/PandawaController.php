@@ -24,7 +24,13 @@ class PandawaController extends Controller
         $couriers = Courier::all();
         $featuredProducts = Product::where('is_popular', true)->take(4)->get();
         $products = Product::where('is_available', true)->with('category')->get();
-        $recentOrders = Order::with(['courier', 'items', 'delivery', 'jastip'])->latest()->take(10)->get();
+
+        // Pesanan terbaru hanya milik member yang sedang login
+        $recentOrders = auth('member')->check()
+            ? Order::with(['courier', 'items', 'delivery', 'jastip'])
+                ->where('member_id', auth('member')->id())
+                ->latest()->take(10)->get()
+            : collect();
 
         return view('pandawa.index', compact('categories', 'couriers', 'featuredProducts', 'products', 'recentOrders'));
     }
@@ -120,6 +126,7 @@ class PandawaController extends Controller
 
             $order = Order::create([
                 'order_code' => $orderCode,
+                'member_id' => auth('member')->id(),
                 'order_type' => 'catalog',
                 'customer_name' => $request->customer_name,
                 'customer_phone' => $request->customer_phone,
@@ -220,6 +227,7 @@ class PandawaController extends Controller
 
             $order = Order::create([
                 'order_code' => $orderCode,
+                'member_id' => auth('member')->id(),
                 'order_type' => 'delivery',
                 'customer_name' => $request->sender_name,
                 'customer_phone' => $request->sender_phone,
@@ -306,6 +314,7 @@ class PandawaController extends Controller
 
             $order = Order::create([
                 'order_code' => $orderCode,
+                'member_id' => auth('member')->id(),
                 'order_type' => 'jastip',
                 'customer_name' => $request->customer_name ?? 'Pelanggan Jastip',
                 'customer_phone' => $request->customer_phone ?? '-',
@@ -438,11 +447,12 @@ class PandawaController extends Controller
     }
 
     /**
-     * API: Riwayat Pesanan dari DB
+     * API: Riwayat Pesanan dari DB (hanya milik member yang login)
      */
     public function getOrderHistory()
     {
         $orders = Order::with(['courier', 'items', 'delivery', 'jastip'])
+            ->where('member_id', auth('member')->id())
             ->latest()
             ->take(20)
             ->get();

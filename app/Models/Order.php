@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Order extends Model
 {
     protected $fillable = [
+        'member_id',
         'order_code',
         'order_type',
         'customer_name',
@@ -36,6 +37,11 @@ class Order extends Model
         'total_amount' => 'float',
         'current_step' => 'integer'
     ];
+
+    public function member(): BelongsTo
+    {
+        return $this->belongsTo(Member::class);
+    }
 
     public function courier(): BelongsTo
     {
